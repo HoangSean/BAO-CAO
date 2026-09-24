@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum PD — Pr[D]</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #111;
+    color: #eee;
+    font-family: Arial, sans-serif;
+  }
+  .wrap {
+    width: min(920px, 96vw);
+    margin: 20px auto;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+  }
+  .controls {
+    padding: 18px 10px 8px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 75px 1fr 65px;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0;
+    font-size: 16px;
+  }
+  input[type="range"] { width: 100%; }
+  .value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .note {
+    text-align: center;
+    color: #aaa;
+    font-size: 13px;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="plot" width="900" height="700"></canvas>
+
+  <div class="controls">
+    <div class="row">
+      <label>γ<sub>d</sub></label>
+      <input id="gamd" type="range" min="0" max="8" step="0.01" value="2.00">
+      <span class="value" id="gamdValue">2.00</span>
+    </div>
+
+    <div class="row">
+      <label>γ<sub>c</sub></label>
+      <input id="gamc" type="range" min="0" max="8" step="0.01" value="2.00">
+      <span class="value" id="gamcValue">2.00</span>
+    </div>
+  </div>
+
+  <div class="note">t = π/2 &nbsp; | &nbsp; μ<sub>d</sub>, μ<sub>c</sub> ∈ [−5, 5]</div>
+</div>
+
+<script>
+/*
+  OFFLINE VERSION
+  Không dùng Plotly/CDN/API/mạng.
+  Mô hình giữ theo code Python:
+      H = H_A + H_B
+      psi(t) = exp(-iHt) psi0
+      P(D) = |<DD|psi>|² + |<CD|psi>|²
+*/
+
+// ---------- matrix ----------
+function matAdd(A,B) {
+  const C = Array.from({length:4},()=>Array(4).fill(0));
+  for(let i=0;i<4;i++) for(let j=0;j<4;j++) C[i][j]=A[i][j]+B[i][j];
+  return C;
+}
+function matScale(A,s) { return A.map(r=>r.map(x=>x*s)); }
+
+// Jacobi eigendecomposition for a real symmetric 4x4 matrix.
+function jacobiEigen(A) {
+  const n=4;
+  const M=A.map(r=>r.slice());
+  const V=Array.from({length:n},(_,i)=>
+    Array.from({length:n},(_,j)=>i===j?1:0)
+  );
+
+  for(let iter=0; iter<120; iter++) {
+    let p=0,q=1,max=0;
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++) {
+      if(Math.abs(M[i][j])>max) {
+        max=Math.abs(M[i][j]); p=i; q=j;
+      }
+    }
+    if(max < 1e-10) break;
+
+    const phi=0.5*Math.atan2(2*M[p][q], M[q][q]-M[p][p]);
+    const co=Math.cos(phi), si=Math.sin(phi);
+
+    const app=M[p][p], aqq=M[q][q], apq=M[p][q];
+    M[p][p]=co*co*app-2*si*co*apq+si*si*aqq;
+    M[q][q]=si*si*app+2*si*co*apq+co*co*aqq;
+    M[p][q]=M[q][p]=0;
+
+    for(let k=0;k<n;k++) if(k!==p && k!==q) {
+      const mkp=M[k][p], mkq=M[k][q];
+      M[k][p]=M[p][k]=co*mkp-si*mkq;
+      M[k][q]=M[q][k]=si*mkp+co*mkq;
+    }
+
+    for(let k=0;k<n;k++) {
+      const vkp=V[k][p], vkq=V[k][q];
+      V[k][p]=co*vkp-si*vkq;
+      V[k][q]=si*vkp+co*vkq;
+    }
+  }
+  return { values:M.map((r,i)=>r[i]), vectors:V };
+}
+
+// ---------- Hamiltonians ----------
+function HA(mud,muc) {
+  const ad=1/Math.sqrt(1+mud*mud);
+  const ac=1/Math.sqrt(1+muc*muc);
+
+  const AD=[
+    [mud,1,0,0],
+    [1,-mud,0,0],
+    [0,0,0,0],
+    [0,0,0,0]
+  ];
+  const AC=[
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,muc,1],
+    [0,0,1,-muc]
+  ];
+  return matAdd(matScale(AD,ad),matScale(AC,ac));
+}
+
+function HB(gamd,gamc) {
+  const MD=[
+    [1,0,1,0],
+    [0,0,0,0],
+    [1,0,-1,0],
+    [0,0,0,0]
+  ];
+  const MC=[
+    [0,0,0,0],
+    [0,-1,0,1],
+    [0,0,0,0],
+    [0,1,0,1]
+  ];
+  return matAdd(
+    matScale(MD,-gamd/Math.sqrt(2)),
+    matScale(MC,-gamc/Math.sqrt(2))
+  );
+}
+
+function HC(mud,muc,gamd,gamc) {
+  return matAdd(HA(mud,muc),HB(gamd,gamc));
+}
+
+// ---------- quantum evolution ----------
+const psi0=[0.5,0.5,0.5,0.5];
+
+function evolvedState(mud,muc,gamd,gamc,t) {
+  const H=HC(mud,muc,gamd,gamc);
+  const E=jacobiEigen(H);
+  const psi=Array.from({length:4},()=>({re:0,im:0}));
+
+  for(let k=0;k<4;k++) {
+    let ak=0;
+    for(let i=0;i<4;i++) ak += E.vectors[i][k]*psi0[i];
+
+    const rePhase=Math.cos(E.values[k]*t);
+    const imPhase=-Math.sin(E.values[k]*t);
+
+    for(let i=0;i<4;i++) {
+      const a=E.vectors[i][k]*ak;
+      psi[i].re += a*rePhase;
+      psi[i].im += a*imPhase;
+    }
+  }
+  return psi;
+}
+
+function PrD(mud,muc,gamd,gamc,t) {
+  const p=evolvedState(mud,muc,gamd,gamc,t);
+  return p[0].re*p[0].re+p[0].im*p[0].im
+       +p[2].re*p[2].re+p[2].im*p[2].im;
+}
+
+// ---------- drawing ----------
+const canvas=document.getElementById("plot");
+const ctx=canvas.getContext("2d");
+
+const W=canvas.width, H=canvas.height;
+const plot={left:82,right:35,top:82,bottom:72};
+const pw=W-plot.left-plot.right;
+const ph=H-plot.top-plot.bottom;
+
+// 81x81 keeps the browser responsive while dragging.
+const N=81;
+const MU=Array.from({length:N},(_,i)=>-5+10*i/(N-1));
+const t=Math.PI/2;
+
+function turbo(v) {
+  // Compact approximation of the Turbo colormap.
+  v=Math.max(0,Math.min(1,v));
+  const r=Math.max(0,Math.min(255,
+    255*(1.5-Math.abs(4*v-3))));
+  const g=Math.max(0,Math.min(255,
+    255*(1.5-Math.abs(4*v-2))));
+  const b=Math.max(0,Math.min(255,
+    255*(1.5-Math.abs(4*v-1))));
+  return [r,g,b];
+}
+
+function draw(gamd,gamc) {
+  document.getElementById("gamdValue").textContent=gamd.toFixed(2);
+  document.getElementById("gamcValue").textContent=gamc.toFixed(2);
+
+  const z=Array.from({length:N},()=>Array(N));
+  for(let j=0;j<N;j++) {
+    for(let i=0;i<N;i++) {
+      z[j][i]=PrD(MU[i],MU[j],gamd,gamc,t);
+    }
+  }
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#000";
+  ctx.fillRect(0,0,W,H);
+
+  // heatmap cells
+  for(let j=0;j<N-1;j++) {
+    for(let i=0;i<N-1;i++) {
+      const v=(z[j][i]+z[j+1][i]+z[j][i+1]+z[j+1][i+1])/4;
+      const [r,g,b]=turbo(v);
+      ctx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
+
+      const x=plot.left+i*pw/(N-1);
+      const y=plot.top+(N-2-j)*ph/(N-1);
+      const cw=pw/(N-1)+1;
+      const ch=ph/(N-1)+1;
+      ctx.fillRect(x,y,cw,ch);
+    }
+  }
+
+  // axes
+  ctx.strokeStyle="#ddd";
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(plot.left,plot.top);
+  ctx.lineTo(plot.left,plot.top+ph);
+  ctx.lineTo(plot.left+pw,plot.top+ph);
+  ctx.stroke();
+
+  ctx.fillStyle="#fff";
+  ctx.font="16px Arial";
+  ctx.textAlign="center";
+  ctx.textBaseline="top";
+
+  for(let v=-5;v<=5;v++) {
+    const x=plot.left+(v+5)/10*pw;
+    ctx.fillText(v.toString(),x,plot.top+ph+12);
+  }
+
+  ctx.textAlign="right";
+  ctx.textBaseline="middle";
+  for(let v=-5;v<=5;v++) {
+    const y=plot.top+(5-v)/10*ph;
+    ctx.fillText(v.toString(),plot.left-10,y);
+  }
+
+  ctx.font="18px Arial";
+  ctx.textAlign="center";
+  ctx.textBaseline="top";
+  ctx.fillText("μd",plot.left+pw/2,H-38);
+
+  ctx.save();
+  ctx.translate(24,plot.top+ph/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText("μc",0,0);
+  ctx.restore();
+
+  // title
+  ctx.font="bold 20px Arial";
+  ctx.textAlign="center";
+  ctx.textBaseline="top";
+  ctx.fillText(
+    `Pr[D],  t = ${t.toFixed(2)},  γd = ${gamd.toFixed(2)},  γc = ${gamc.toFixed(2)}`,
+    W/2,22
+  );
+
+  // colorbar
+  const cbx=W-24, cby=plot.top, cbw=14, cbh=ph;
+  for(let k=0;k<cbh;k++) {
+    const v=1-k/(cbh-1);
+    const [r,g,b]=turbo(v);
+    ctx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
+    ctx.fillRect(cbx,cby+k,cbw,1);
+  }
+  ctx.strokeStyle="#ddd";
+  ctx.strokeRect(cbx,cby,cbw,cbh);
+  ctx.fillStyle="#fff";
+  ctx.font="12px Arial";
+  ctx.textAlign="left";
+  ctx.textBaseline="middle";
+  ctx.fillText("1",cbx-3,cby-12);
+  ctx.fillText("0",cbx-3,cby+cbh+12);
+  ctx.save();
+  ctx.translate(cbx+31,cby+cbh/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText("P(D)",0,0);
+  ctx.restore();
+}
+
+function update() {
+  draw(
+    parseFloat(document.getElementById("gamd").value),
+    parseFloat(document.getElementById("gamc").value)
+  );
+}
+
+document.getElementById("gamd").addEventListener("input",update);
+document.getElementById("gamc").addEventListener("input",update);
+
+draw(2.0,2.0);
+</script>
+</body>
+</html>
