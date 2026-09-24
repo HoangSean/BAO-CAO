@@ -1,0 +1,283 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- CÁC GÓI CẦN THIẾT ---
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[margin=1.5cm, bottom=2cm]{geometry} % Căn chỉnh lề hẹp kiểu Jaan Kalda
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}          % Tạo màu chữ và hộp
+\usepackage{hyperref} 
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{minted}
+\usepackage{hyperref}
+\usepackage[most]{tcolorbox}
+
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{tocloft}
+\usepackage{enumitem}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{xcoffins,calc}
+\usepackage{fancyhdr}
+
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{wrapfig}
+\usepackage{pgfplots}
+\geometry{margin=2.5cm}
+
+\usepackage{tocloft}
+\usepackage{enumitem}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{xcoffins,calc}
+\usepackage{fancyhdr}
+\usepackage{braket}
+
+\usepackage{minted}
+\setminted{
+    fontsize=\small,
+    breaklines,
+    linenos,
+    frame=single,
+    framesep=2mm
+}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage{xcolor}
+
+
+
+\newcommand{\expect}[1]{%
+\left \langle #1 \right\rangle%
+}
+\newcommand{\intefty}{%
+\int_{-\infty}^{\infty} %
+}
+\newcommand{\vcs}[1]{%
+\left| #1 \right \rangle
+%
+}
+
+\newcommand{\abs}[1]{%
+\left| #1 \right |
+%
+}
+
+\newcommand{\adj}[1]{%
+#1^\dagger
+%
+}
+
+\newcommand{\ngtron}[1]{% 
+\left( #1 \right) %
+}
+
+\newcommand{\ngvg}[1]{% 
+\left[ #1 \right] %
+}
+
+\newcommand{\ptial}[2]{%
+\dfrac{\partial^2 }{\partial {#1}^2} #2
+%
+}
+
+\newcommand{\prial}[2]{%
+\dfrac{\partial }{\partial {#1}} #2
+%
+}
+
+\newcommand{\de}[2]{%
+\dfrac{d }{d {#1}} #2
+%
+}
+
+\newcommand{\sde}[2]{%
+\dfrac{d^2 }{d {#1}^2} #2
+%
+}
+
+
+\begin{document}
+
+\begin{center}
+    \Large \textbf{BÁO CÁO VỀ PRISONER'S DILEMMA}
+\end{center}
+\section{Ảnh hưởng của pays-off đến xác suất defect}
+Trong bài báo\textit{ A quantum probability explanation for violations of
+‘rational’ decision theory} của Pothos và Busemeyer có đề cập đến các tham số $\mu_d$ và $\mu_c$ phụ thuộc vào pay-offs của trò chơi, Hamiltonian dựa trên ma trận pay-offs:
+\begin{equation}
+    H_A = \begin{bmatrix}
+        H_{Ad} & 0 \\ 0 & H_{Ac}
+    \end{bmatrix}, \quad H_{Ai} = \frac{1}{\sqrt{1+\mu_i^2}} \begin{bmatrix}
+        \mu_i&1\\1&-\mu_i
+    \end{bmatrix}
+\end{equation}
+
+Trong đó $\mu_i,~i=d,c$ là tham số được xác định bằng hàm utility - 1 công cụ toán học đo lường sự hài lòng của đối tượng đối với một số lợi ích nào đó, thường được dùng trong kinh tế học. Trong Prisoner's Dilemma (PD) hàm utility cũng sẽ được dùng để đo lường xác suất chọn defect trong trò chơi. Pothos và Busemeyer định nghĩa tham số $\mu_i$ như sau:
+\begin{equation}
+    \mu_d = U(x_{DD} - x_{DC}), \quad \mu_c = U\ngtron{x_{CD} - x_{CC}}
+\end{equation}
+
+trong đó $x_{ij}$ là số điểm người chơi nhận được khi đối thủ chọn hành động $i$ và người chơi chọn hành động $j$, $U$ là hàm utility, có thể được xây dựng như một hàm tuyến tính hoặc những hàm phức tạp hơn.
+
+Dựa vào ma trận pays-off ví dụ trong bài báo:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{payoff.png}
+\end{figure}
+
+Ta có: \begin{align*}
+    \begin{cases}
+        x_{DD} = 10, \quad x_{DC} = 5\to x_{DD} - x_{DC}=5\\
+        x_{CD} = 25, \quad x_{CC} = 20\to x_{CD} - x_{CC} =5 
+    \end{cases}
+\end{align*}
+
+Như vậy $\mu_d =\mu_c = U(5) = \mu$ và các tác giả chọn $U(5) = 0.51$.\\
+\textbf{Phương trình Schrodinger}
+\\ Xét sự thay đổi của trạng thái tâm lý theo thời gian:
+\begin{equation}
+    \de{t}{\ket{\psi}} = -iH_A\ket{\psi}
+\end{equation}
+
+Nghiệm phương trình:
+\begin{equation}
+    \ket{\psi_2} = e^{-iH_A t} \ket{\psi_1} = e^{-iH_A t} \begin{bmatrix}
+        \psi_{DD} \\  \psi_{DC} \\  \psi_{CD} \\  \psi_{CC}
+    \end{bmatrix}
+\end{equation}
+
+Khai triển Taylor hàm exp ta có:
+\begin{align*}
+    e^{-iH_A t} = \sum_{n=0} \frac{\ngtron{-iH_A t}^n}{n!} = \sum_{m=0} \frac{\ngtron{-iH_A t}^n}{m!} + \sum_{k=1} \frac{\ngtron{-iH_A t}^k}{k!}, \quad \begin{cases}
+        m = \text{số chẵn}\\ k = \text{số lẻ}
+    \end{cases}
+\end{align*}
+
+với $H_{Ai} ^2 = I$ nên $H_A^2 = \begin{bmatrix}
+    H_{Ad}^2&0 \\0 & H_{Ac}^2
+\end{bmatrix} =I$, $H_A^{2n} = I$, và $H_A^{2n+1} = H_A$. Như vậy:
+\begin{equation}
+    e^{-iH_A t} = I\cos t - iH_A \sin t = \begin{bmatrix}
+        \frac{\cos t - i\mu_d\sin t}{\sqrt{1+\mu_d^2}} & \frac{ - i\sin t}{\sqrt{1+\mu_d^2}} &0 &0 \\
+        \frac{ - i\sin t}{\sqrt{1+\mu_d^2}}&\frac{\cos t + i\mu_d\sin t}{\sqrt{1+\mu_d^2}}&0&0 \\
+        0&0&\frac{\cos t - i\mu_c\sin t}{\sqrt{1+\mu_c^2}} & \frac{ - i\sin t}{\sqrt{1+\mu_c^2}} \\ 0&0 & \frac{ - i\sin t}{\sqrt{1+\mu_c^2}}&\frac{\cos t + i\mu_c\sin t}{\sqrt{1+\mu_c^2}}
+    \end{bmatrix}
+\end{equation}
+\textbf{XÁC SUẤT DEFECT TRONG CÁC TRƯỜNG HỢP}
+\\ \textbf{1. Khi biết đối thủ chọn C}: Trạng thái ban đầu: $\ket{\psi_1} = 1/\sqrt{2} \cdot \ngvg{0~~0~~1~~1}^T$
+\begin{equation}
+|\psi_2\rangle= 
+\frac{1}{\sqrt{2(1+\mu_c^2)}}
+\begin{bmatrix}
+0\\
+0\\
+\cos t-i(\mu_c+1)\sin t\\
+\cos t+i(\mu_c-1)\sin t
+\end{bmatrix}
+\end{equation}
+\begin{equation}
+    Pr[A_D|B_C] = \abs{\psi_{DD}}^2 + \abs{\psi_{CD}}^2 = \frac{1}{2}+\frac{\mu_c}{1+\mu_c^2} \sin^2 t
+\end{equation}
+\textbf{2. Khi biết đối thủ chọn D}: Trạng thái ban đầu: $\ket{\psi_1} = 1/\sqrt{2} \cdot \ngvg{1~~1~~0~~0}^T$
+\begin{equation}
+|\psi_2\rangle= 
+\frac{1}{\sqrt{2(1+\mu_d^2)}}
+\begin{bmatrix}
+\cos t-i(\mu_d+1)\sin t\\
+\cos t+i(\mu_d-1)\sin t\\
+0\\
+0\\
+\end{bmatrix}
+\end{equation}
+\begin{equation}
+    Pr[A_D|B_D] = \abs{\psi_{DD}}^2 + \abs{\psi_{CD}}^2 = \frac{1}{2}+\frac{\mu_d}{1+\mu_d^2} \sin^2 t
+\end{equation}
+\textbf{3. Khi không biết đối thủ chọn gì}: Trạng thái ban đầu: $\ket{\psi_1} = 1/2\cdot \ngvg{1~~1~~1~~1}^T$
+\begin{equation}
+|\psi_2\rangle= 
+\frac{1}{2}
+\begin{bmatrix}
+\dfrac{\cos t-i(\mu_d+1)\sin t}
+{\sqrt{1+\mu_d^2}}
+\\[10pt]
+\dfrac{\cos t+i(\mu_d-1)\sin t}
+{\sqrt{1+\mu_d^2}}
+\\[10pt]
+\dfrac{\cos t-i(\mu_c+1)\sin t}
+{\sqrt{1+\mu_c^2}}
+\\[10pt]
+\dfrac{\cos t+i(\mu_c-1)\sin t}
+{\sqrt{1+\mu_c^2}}
+\end{bmatrix}
+\end{equation}
+\begin{equation}
+    Pr[D] = \abs{\psi_{DD}}^2 + \abs{\psi_{CD}}^2 = \frac{1}{2} \ngtron{\frac{1}{2}+\frac{\mu_d}{1+\mu_d^2} \sin^2 t} + \frac{1}{2}\ngtron{\frac{1}{2}+\frac{\mu_c}{1+\mu_c^2} \sin^2 t}
+\end{equation}
+Thấy rằng xác suất chọn D trong trường hợp không biết đối thủ chọn gì chính là trung bình cộng của $Pr[A_D|B_D]$ và $Pr[A_D|B_C]$.\\
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{Ảnh màn hình 2026-09-22 lúc 11.09.40.png}
+\end{figure}
+2 tham số \(\mu_d\) và \(\mu_c\) tương ứng với động lực lựa chọn defect khi người chơi tin rằng đối thủ lần lượt chọn defect và cooperate (số điểm nhận được khi chọn D cao hơn khi chọn C càng nhiều thì động lực chọn D càng lớn). Có thể thấy \(Pr[D]\) đạt giá trị cao trong vùng các tham số \(\mu_d,\mu_c>0\), đặc biệt khi cả hai tham số nằm trong vùng giá trị gần \(1\). Điều này phản ánh xu hướng lựa chọn defect tăng khi động lực lựa chọn defect trong cả hai bối cảnh đều tăng. Tuy nhiên, sự phụ thuộc này không đơn điệu theo \(\mu_d\) và \(\mu_c\). Cụ thể, thành phần
+$
+\frac{\mu}{1+\mu^2}$
+đạt cực đại tại \(\mu=1\) và giảm khi \(\mu>1\). Vì vậy, khi một trong hai tham số tiếp tục tăng vượt quá vùng này, xác suất defect không tiếp tục tăng tương ứng.
+
+Hơn nữa, chỉ với ma trận $H_A$ thì kết quả chưa thể giải thích được sự vi phạm sure-thing principle. Bởi theo số liệu từ nghiên cứu của Shafir và Tversky (1992), xác suất khi chọn D trong trường hợp unknown là 0.55, nằm ngoài khoảng của xác suất chọn D khi biết đối thủ C - 0.66 và khi đối thủ chọn D - 0.84. Trong khi với mô hình trên thì $Pr[D]$ lại là trung bình cộng của 2 trường hợp còn lại. Vậy nên các tác giả đã xét thêm Hamiltonian dựa trên beliefs và wishful thinking để mô tả rõ hơn về các kết quả xác suất. 
+
+\section{Ảnh hưởng của beliefs đến xác suất defect}
+Bây giờ, ta xét thêm ma trận beliefs có dạng:
+\begin{equation}
+    H_B = -\frac{\gamma_d}{\sqrt{2}} \begin{bmatrix}
+        1&0&1&0\\0&0&0&0\\ 1&0&-1&0\\ 0&0&0&0
+    \end{bmatrix} +\frac{-\gamma_c}{\sqrt{2}}\begin{bmatrix}
+        0&0&0&0\\0&-1&0&1\\ 0&0&0&0\\ 0&1&0&1
+    \end{bmatrix}
+\end{equation}
+
+Trong đó, ma trận thứ nhất và ma trận thứ hai lần lượt biểu diễn sự
+điều chỉnh belief về phía đối thủ lựa chọn Dvà C khi người chơi
+dự định lựa chọn D và C, tương ứng. Các tham số $\gamma_d$ và
+$\gamma_c$ biểu thị cường độ điều chỉnh các belief trên. $\gamma_d$ đặc trưng cho xu hướng chuyển belief từ $B_C$ sang
+$B_D$ khi người chơi dự định chọn D, trong khi $\gamma_c$ đặc
+trưng cho xu hướng chuyển belief từ $B_D$ sang $B_C$ khi người chơi
+dự định chọn C. Ma trận này được xây dựng để giảm thiểu hiệu ứng cognitive dissonance do Festinger trình bày (1957). Tức có nghĩa rằng khi người chơi chọn D/C, họ có thiên hướng biện hộ rằng đối thủ cũng sẽ chọn D/C để hợp lý hóa hành động của mình.
+
+Kết hợp với $H_A$, mô hình đã trở nên toàn diện hơn khi xét cả 2 yếu tố: belief tác động lên action và action cũng tác động trở lại belief về đối thủ.
+\begin{equation}
+    H_C = H_B + H_A
+\end{equation}
+\textbf{Phương trình Schrodinger}
+\begin{equation}
+    \de{t}{\ket{\psi}} = -iH_C\ket{\psi}
+\end{equation}
+
+Nghiệm của phương trình là \begin{equation}
+    \ket{\psi_2} = e^{-iH_C t}\ket{\psi_1}
+\end{equation}
+Với trường hợp các tham số $\gamma_d = \gamma_c = \gamma$ và thời gian được xét tại $\pi/2$, ta có đồ thị khảo sát giữa $Pr[D]$ và các tham số $\mu_c$ và $\mu_d$ như sau
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\linewidth]{mu.png}
+
+\end{figure}
+Có thể thấy rằng các vùng: $\mu_d << \mu_c$ và $\mu_d>>\mu_c$ xác suất chọn D khá cao so với các vùng còn lại. Xét lại ý nghĩa của các tham số $\mu$ ta thấy rằng: \begin{itemize}
+    \item Khi $\mu_c$ rất lớn, độ chênh lệch số điểm khi người chơi chọn D và C (khi đối thủ chọn C) là rất lớn. 
+    \item Tương tự với khi $\mu_d$ rất lớn, độ chênh lệch số điểm khi người chơi chọn D và C (khi đối thủ chọn D) là rất cao.\\
+    Có thể hiểu rằng sự chênh lệch này sẽ thúc đẩy động lực chọn D của người chơi hơn.
+    \item Thế nhưng, xét lại các vùng mà ở đó giá trị của $\mu_d$ và $\mu_c$ tương đương nhau, thì xác suất chọn D lại không cao như 2 vùng đã nhận xét trên.
+\end{itemize}
+\end{document}
